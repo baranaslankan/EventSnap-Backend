@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Photographer {
+  id       Int      @id @default(autoincrement())
+  name     String
+  email    String   @unique
+  password String
+  events   Event[]  @relation("PhotographerEvents")
+  photos   Photo[]  @relation("PhotographerUploads")
+}
+
+model Event {
+  id          Int         @id @default(autoincrement())
+  title       String
+  date        DateTime
+  location    String
+  type        String
+  created_by  Int
+  photographer Photographer @relation(fields: [created_by], references: [id], name: "PhotographerEvents")
+  guests      Guest[]      @relation("EventGuests")
+  photos      Photo[]
+}
+
+model Guest {
+  id                 Int     @id @default(autoincrement())
+  name               String
+  reference_photo_url String?
+  event_id           Int
+  event              Event   @relation(fields: [event_id], references: [id], name: "EventGuests")
+  photos             PhotoGuest[]
+}
+
+model Photo {
+  id          Int       @id @default(autoincrement())
+  event_id    Int
+  file_url    String
+  uploaded_by Int
+  event       Event        @relation(fields: [event_id], references: [id])
+  photographer Photographer @relation(fields: [uploaded_by], references: [id], name: "PhotographerUploads")
+  tagged_guests PhotoGuest[]
+}
+
+model PhotoGuest {
+  photo_id Int
+  guest_id Int
+  photo    Photo @relation(fields: [photo_id], references: [id])
+  guest    Guest @relation(fields: [guest_id], references: [id])
+
+  @@id([photo_id, guest_id])
+}
