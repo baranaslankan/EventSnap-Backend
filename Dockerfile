@@ -17,5 +17,5 @@ RUN npm run build
 # entrypoint will run migrations (if DATABASE_URL present) then start app
 RUN install -m 755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
-EXPOSE 3000
+EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
