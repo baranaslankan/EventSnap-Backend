@@ -1,13 +1,18 @@
-#!/usr/bin/env sh
+#!/bin/sh
 set -e
 
-# If DATABASE_URL is set, try to run prisma migrations (deploy)
+echo "==== EventSnap entrypoint started ===="
+
+# Check DB connection variable
 if [ -n "$DATABASE_URL" ]; then
   echo "Generating Prisma client..."
-  npx prisma generate || true
-  echo "Running prisma migrate deploy..."
-  npx prisma migrate deploy || true
+  npx prisma generate || echo "⚠️ Prisma generate failed (non-fatal)"
+
+  echo "Running Prisma migrations..."
+  npx prisma migrate deploy || echo "⚠️ No pending migrations or failed silently"
+else
+  echo "⚠️ DATABASE_URL not set, skipping Prisma commands"
 fi
 
-echo "Starting application"
-node dist/main.js
+echo "Starting NestJS application..."
+exec node dist/main.js

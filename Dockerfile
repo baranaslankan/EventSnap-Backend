@@ -1,25 +1,29 @@
 FROM node:18-alpine
+
+# Set working directory
 WORKDIR /usr/src/app
 
-# install runtime libs needed by Prisma engines on Alpine
-RUN apk add --no-cache openssl libc6-compat
+# Install runtime libs for Prisma on Alpine
+RUN apk add --no-cache openssl libc6-compat bash
 
-# install full dependencies (include dev for build and prisma CLI)
+# Copy package files and install deps
 COPY package*.json ./
-RUN npm ci
-RUN npx prisma generate
+RUN npm install
 
-# copy source
+# Copy the rest of the app
 COPY . .
 
-# ensure clean build output then build TypeScript
-RUN rm -rf dist && npm run build \
- && echo '--- DEBUG: head of compiled dist/photos/s3.service.js ---' \
- && (head -n 40 dist/photos/s3.service.js || true) \
- && echo '--- DEBUG END ---'
+# Generate Prisma client
+RUN npx prisma generate
 
-# entrypoint will run migrations (if DATABASE_URL present) then start app
-RUN install -m 755 entrypoint.sh /usr/local/bin/entrypoint.sh
+# Build TypeScript
+RUN npm run build
 
+# Make sure entrypoint exists (optional for EB)
+RUN chmod +x entrypoint.sh
+
+# Expose the default EB port
 EXPOSE 8080
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Start the app
+CMD ["npm", "run", "start:prod"]
