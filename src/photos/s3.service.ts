@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class S3Service {
@@ -8,18 +8,23 @@ export class S3Service {
   private bucketName: string;
 
   constructor() {
-    this.s3Client = new S3Client({
-      region: process.env.AWS_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      },
-    });
-    this.bucketName = process.env.AWS_S3_BUCKET_NAME!;
+    const region = process.env.AWS_REGION || 'us-east-1';
+    const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+
+    // Only set explicit credentials if provided; otherwise use default AWS provider chain
+    const clientConfig: any = { region };
+    if (accessKeyId && secretAccessKey) {
+      clientConfig.credentials = { accessKeyId, secretAccessKey };
+    }
+    this.s3Client = new S3Client(clientConfig);
+
+    // Support both AWS_S3_BUCKET_NAME and S3_BUCKET_NAME
+    this.bucketName = process.env.AWS_S3_BUCKET_NAME || process.env.S3_BUCKET_NAME!;
   }
 
   async uploadFile(file: Express.Multer.File): Promise<string> {
-    const key = `photos/${uuidv4()}-${file.originalname}`;
+  const key = `photos/${randomUUID()}-${file.originalname}`;
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
