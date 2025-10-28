@@ -11,8 +11,8 @@ RUN npm ci
 # copy source
 COPY . .
 
-# build TypeScript
-RUN npm run build
+# ensure clean build output then build TypeScript
+RUN rm -rf dist && npm run build
 
 # entrypoint will run migrations (if DATABASE_URL present) then start app
 RUN install -m 755 entrypoint.sh /usr/local/bin/entrypoint.sh

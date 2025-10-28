@@ -1,0 +1,19 @@
+# Exclude heavy or generated content from Docker build context
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store
+
+# Build output
+/dist
+/*.zip
+
+# VCS and local files
+.git
+.gitignore
+.eslintcache
+.DS_Store
+
+# EB local metadata (not needed inside image)
+.elasticbeanstalk
