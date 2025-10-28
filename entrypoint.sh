@@ -3,6 +3,8 @@ set -e
 
 # If DATABASE_URL is set, try to run prisma migrations (deploy)
 if [ -n "$DATABASE_URL" ]; then
+  echo "Generating Prisma client..."
+  npx prisma generate || true
   echo "Running prisma migrate deploy..."
   npx prisma migrate deploy || true
 fi
