@@ -11,22 +11,23 @@ export class AuthService {
     ) { }
 
     async login(email: string, password: string) {
+        console.log('Login denemesi:', email, password);
         const photographer = await this.prisma.photographer.findUnique({
             where: { email },
         })
-
+        console.log('Photographer:', photographer);
         if (!photographer) {
+            console.log('No photographer found');
             throw new UnauthorizedException('Invalid credentials');
         }
-
+        console.log('Hash:', photographer.password);
         const isPasswordValid = await bcrypt.compare(password, photographer.password);
+        console.log('isPasswordValid:', isPasswordValid);
         if (!isPasswordValid) {
             throw new UnauthorizedException('Invalid credentials');
         }
-
         const payload = { sub: photographer.id, email: photographer.email };
         const token = this.jwtService.sign(payload);
-
         return {
             access_token: token,
             photographer: {
