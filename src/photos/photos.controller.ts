@@ -22,7 +22,7 @@ export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('photo'))
+  @UseInterceptors(FileInterceptor('file'))
   uploadPhoto(
     @UploadedFile() file: Express.Multer.File,
     @Body('eventId') eventId: string,
