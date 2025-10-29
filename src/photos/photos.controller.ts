@@ -28,6 +28,7 @@ export class PhotosController {
     @Body('eventId') eventId: string,
     @Request() req,
   ) {
+    console.log('UPLOAD DEBUG file:', file, 'eventId:', eventId, 'user:', req.user);
     return this.photosService.uploadPhoto(+eventId, file, req.user.id);
   }
 
