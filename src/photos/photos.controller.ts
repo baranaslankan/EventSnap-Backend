@@ -7,11 +7,12 @@ import {
   Body,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   Request,
   Query,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { PhotosService } from './photos.service';
 import { TagGuestDto } from './dto/tag-guest.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -22,14 +23,13 @@ export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  uploadPhoto(
-    @UploadedFile() file: Express.Multer.File,
+  @UseInterceptors(FilesInterceptor('photo'))
+  uploadPhotos(
+    @UploadedFiles() files: Array<Express.Multer.File>,
     @Body('eventId') eventId: string,
     @Request() req,
   ) {
-    console.log('UPLOAD DEBUG file:', file, 'eventId:', eventId, 'user:', req.user);
-    return this.photosService.uploadPhoto(+eventId, file, req.user.id);
+    return this.photosService.uploadPhotos(+eventId, files, req.user.id);
   }
 
   @Get('event/:eventId')

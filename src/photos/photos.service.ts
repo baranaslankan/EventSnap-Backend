@@ -33,6 +33,28 @@ export class PhotosService {
     });
   }
 
+  async uploadPhotos(eventId: number, files: Array<Express.Multer.File>, photographerId: number) {
+    const event = await this.prisma.event.findFirst({
+      where: { id: eventId, created_by: photographerId },
+    });
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    const createdPhotos: any[] = [];
+    for (const file of files) {
+      const fileUrl = await this.s3Service.uploadFile(file);
+      const photo = await this.prisma.photo.create({
+        data: {
+          event_id: eventId,
+          file_url: fileUrl,
+          uploaded_by: photographerId,
+        },
+      });
+      createdPhotos.push(photo);
+    }
+    return createdPhotos;
+  }
+
   async getEventPhotos(eventId: number, photographerId: number) {
     const event = await this.prisma.event.findFirst({
       where: { id: eventId, created_by: photographerId },
