@@ -31,15 +31,14 @@ export class GuestsService {
     });
   }
 
-  async findAll(eventId: number, photographerId: number) {
-    const event = await this.prisma.event.findFirst({
-      where: { id: eventId, created_by: photographerId },
+  async findAll(eventId: number) {
+    // Public: just check event exists
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
     });
-
     if (!event) {
       throw new NotFoundException('Event not found');
     }
-
     return this.prisma.guest.findMany({
       where: { event_id: eventId },
       include: {

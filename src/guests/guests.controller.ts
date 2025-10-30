@@ -25,8 +25,9 @@ export class GuestsController {
   }
 
   @Get('event/:eventId')
-  findAll(@Param('eventId') eventId: string, @Request() req) {
-    return this.guestsService.findAll(+eventId, req.user.id);
+  findAll(@Param('eventId') eventId: string) {
+    // Public guest list for event
+    return this.guestsService.findAll(+eventId);
   }
 
   @Get(':id')
