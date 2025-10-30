@@ -34,7 +34,7 @@ export class PhotosController {
 
   @Get('event/:eventId')
   getEventPhotos(@Param('eventId') eventId: string, @Request() req) {
-    return this.photosService.getEventPhotos(+eventId, req.user.id);
+    return this.photosService.getEventPhotos(+eventId, req.user?.id);
   }
 
   @Post(':id/tag')
