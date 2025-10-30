@@ -63,4 +63,16 @@ export class PhotosController {
   deletePhoto(@Param('id') photoId: string, @Request() req) {
     return this.photosService.deletePhoto(+photoId, req.user.id);
   }
+
+  @Get('presigned/:key')
+  async getPresignedUrl(
+    @Param('key') key: string,
+    @Query('expires') expires: string,
+  ) {
+    // expires parametresi opsiyonel, yoksa 3600 (1 saat) kullan
+    const expiresIn = expires ? parseInt(expires, 10) : 3600;
+    return {
+      url: await this.photosService.getPhotoPresignedUrl(key, expiresIn),
+    };
+  }
 }

@@ -136,4 +136,8 @@ export class PhotosService {
       where: { id: photoId },
     });
   }
+
+  async getPhotoPresignedUrl(photoKey: string, expiresInSeconds = 3600) {
+    return this.s3Service.getPresignedUrl(photoKey, expiresInSeconds);
+  }
 }
