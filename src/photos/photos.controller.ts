@@ -18,11 +18,11 @@ import { TagGuestDto } from './dto/tag-guest.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('photos')
-@UseGuards(JwtAuthGuard)
 export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 
   @Post('upload')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('photo'))
   uploadPhotos(
     @UploadedFiles() files: Array<Express.Multer.File>,
@@ -38,6 +38,7 @@ export class PhotosController {
   }
 
   @Post(':id/tag')
+  @UseGuards(JwtAuthGuard)
   tagGuest(
     @Param('id') photoId: string,
     @Body() tagGuestDto: TagGuestDto,
@@ -51,6 +52,7 @@ export class PhotosController {
   }
 
   @Delete(':photoId/guests/:guestId')
+  @UseGuards(JwtAuthGuard)
   removeTag(
     @Param('photoId') photoId: string,
     @Param('guestId') guestId: string,
@@ -60,6 +62,7 @@ export class PhotosController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   deletePhoto(@Param('id') photoId: string, @Request() req) {
     return this.photosService.deletePhoto(+photoId, req.user.id);
   }
