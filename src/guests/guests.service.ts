@@ -6,13 +6,21 @@ import { CreateGuestDto } from './dto/create-guest.dto';
 export class GuestsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(eventId: number, createGuestDto: CreateGuestDto, photographerId: number) {
-    const event = await this.prisma.event.findFirst({
-      where: { id: eventId, created_by: photographerId },
-    });
-
-    if (!event) {
-      throw new NotFoundException('Event not found');
+  async create(eventId: number, createGuestDto: CreateGuestDto, photographerId?: number) {
+    if (photographerId !== undefined) {
+      const event = await this.prisma.event.findFirst({
+        where: { id: eventId, created_by: photographerId },
+      });
+      if (!event) {
+        throw new NotFoundException('Event not found');
+      }
+    } else {
+      const event = await this.prisma.event.findUnique({
+        where: { id: eventId },
+      });
+      if (!event) {
+        throw new NotFoundException('Event not found');
+      }
     }
 
     return this.prisma.guest.create({

@@ -10,10 +10,8 @@ import {
 } from '@nestjs/common';
 import { GuestsService } from './guests.service';
 import { CreateGuestDto } from './dto/create-guest.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('guests')
-@UseGuards(JwtAuthGuard)
 export class GuestsController {
   constructor(private readonly guestsService: GuestsService) {}
 
@@ -21,9 +19,9 @@ export class GuestsController {
   create(
     @Param('eventId') eventId: string,
     @Body() createGuestDto: CreateGuestDto,
-    @Request() req,
   ) {
-    return this.guestsService.create(+eventId, createGuestDto, req.user.id);
+    // Public guest kaydı, authentication yok
+    return this.guestsService.create(+eventId, createGuestDto, undefined);
   }
 
   @Get('event/:eventId')
