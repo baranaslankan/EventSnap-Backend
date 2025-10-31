@@ -11,6 +11,7 @@ import {
   UseGuards,
   Request,
   Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { PhotosService } from './photos.service';
@@ -67,45 +68,61 @@ export class PhotosController {
     return this.photosService.deletePhoto(+photoId, req.user.id);
   }
 
-  @Get('presigned/:key')
-  async getPresignedUrl(
-    @Param('key') key: string,
-    @Query('expires') expires: string,
-  ) {
-    // expires parametresi opsiyonel, yoksa 3600 (1 saat) kullan
-    const expiresIn = expires ? parseInt(expires, 10) : 3600;
-    return {
-      url: await this.photosService.getPhotoPresignedUrl(key, expiresIn),
-    };
-  }
-
-  // Also accept ?key=... because path params break when key contains slashes or spaces.
   @Get('presigned')
-  async getPresignedUrlByQuery(
-    @Query('key') key: string,
-    @Query('expires') expires: string,
+  async getPresignedUrlQuery(
+    @Query('key') key?: string,
+    @Query('expires') expires?: string,
   ) {
     const expiresIn = expires ? parseInt(expires, 10) : 3600;
-    if (!key) {
-      return { message: 'Missing key query parameter' };
-    }
+    if (!key) throw new NotFoundException('Key required');
 
-    // Some clients double-encode the key (space -> %20 -> %2520).
-    // Iteratively decode until stable or up to 3 iterations.
-    let decoded = key;
-    for (let i = 0; i < 3; i++) {
+    const normalized = this.normalizeAndDecodeKey(key);
+    const candidates = [normalized];
+    if (!normalized.startsWith('photos/')) candidates.push(`photos/${normalized}`);
+    if (normalized.startsWith('photos/')) candidates.push(normalized.replace(/^photos\//, ''));
+
+    for (const k of candidates) {
       try {
-        const next = decodeURIComponent(decoded);
-        if (next === decoded) break;
-        decoded = next;
-      } catch (e) {
-        // if decodeURIComponent fails, stop and use current value
-        break;
+        const url = await this.photosService.getPhotoPresignedUrl(k, expiresIn);
+        return { url };
+      } catch {
+        // try next candidate
       }
     }
+    throw new NotFoundException('Presigned URL not found for key');
+  }
 
-    return {
-      url: await this.photosService.getPhotoPresignedUrl(decoded, expiresIn),
-    };
+  @Get('presigned/:key')
+  async getPresignedUrlPath(
+    @Param('key') key: string,
+    @Query('expires') expires?: string,
+  ) {
+    const expiresIn = expires ? parseInt(expires, 10) : 3600;
+    const normalizedKey = this.normalizeAndDecodeKey(key);
+    return { url: await this.photosService.getPhotoPresignedUrl(normalizedKey, expiresIn) };
+  }
+
+  // Helper: normalize various forms (full URL, double-encoded, with/without photos/ prefix)
+  private normalizeAndDecodeKey(raw: string): string {
+    try {
+      let k = raw;
+      if (k.startsWith('http')) {
+        try {
+          k = new URL(k).pathname.replace(/^\//, '');
+        } catch {}
+      }
+      for (let i = 0; i < 2; i++) {
+        try {
+          const d = decodeURIComponent(k);
+          if (d === k) break;
+          k = d;
+        } catch {
+          break;
+        }
+      }
+      return k;
+    } catch {
+      return raw;
+    }
   }
 }
