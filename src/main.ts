@@ -5,16 +5,10 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Hardcode allowed origins to include the Vercel frontend for quick testing.
-  // Remove or replace with env-driven value for long-term/production use.
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://event-snap-frontend.vercel.app',
-  ];
-
+  // Temporarily allow all origins (reflect origin) to unblock frontend quickly.
+  // Note: this is less restrictive — revert to a whitelist for production.
   app.enableCors({
-    origin: allowedOrigins,
+    origin: true, // reflect request origin and allow credentials
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
