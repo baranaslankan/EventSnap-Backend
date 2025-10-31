@@ -67,12 +67,34 @@ export class EventsService {
   async remove(id: number, photographerId: number) {
     const event = await this.prisma.event.findFirst({
       where: { id, created_by: photographerId },
+      include: {
+        guests: true,
+        photos: true,
+      },
     });
 
     if (!event) {
       throw new NotFoundException('Event not found');
     }
 
+    // Delete all PhotoGuest relations for event photos
+    await this.prisma.photoGuest.deleteMany({
+      where: {
+        photo_id: { in: event.photos.map(photo => photo.id) },
+      },
+    });
+
+    // Delete all photos for the event
+    await this.prisma.photo.deleteMany({
+      where: { event_id: id },
+    });
+
+    // Delete all guests for the event
+    await this.prisma.guest.deleteMany({
+      where: { event_id: id },
+    });
+
+    // Now delete the event
     return this.prisma.event.delete({
       where: { id },
     });
