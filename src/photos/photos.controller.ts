@@ -78,4 +78,34 @@ export class PhotosController {
       url: await this.photosService.getPhotoPresignedUrl(key, expiresIn),
     };
   }
+
+  // Also accept ?key=... because path params break when key contains slashes or spaces.
+  @Get('presigned')
+  async getPresignedUrlByQuery(
+    @Query('key') key: string,
+    @Query('expires') expires: string,
+  ) {
+    const expiresIn = expires ? parseInt(expires, 10) : 3600;
+    if (!key) {
+      return { message: 'Missing key query parameter' };
+    }
+
+    // Some clients double-encode the key (space -> %20 -> %2520).
+    // Iteratively decode until stable or up to 3 iterations.
+    let decoded = key;
+    for (let i = 0; i < 3; i++) {
+      try {
+        const next = decodeURIComponent(decoded);
+        if (next === decoded) break;
+        decoded = next;
+      } catch (e) {
+        // if decodeURIComponent fails, stop and use current value
+        break;
+      }
+    }
+
+    return {
+      url: await this.photosService.getPhotoPresignedUrl(decoded, expiresIn),
+    };
+  }
 }
